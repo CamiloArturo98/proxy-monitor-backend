@@ -15,7 +15,6 @@ import java.util.List;
 @Repository
 public interface ServiceLogRepository extends JpaRepository<ServiceLog, Long> {
 
-    // Filtered query with optional params
     @Query("""
             SELECT l FROM ServiceLog l
             WHERE (:serviceId IS NULL OR l.serviceId = :serviceId)
@@ -32,7 +31,6 @@ public interface ServiceLogRepository extends JpaRepository<ServiceLog, Long> {
             Pageable pageable
     );
 
-    // Summary aggregation per service
     @Query("""
             SELECT l.serviceId,
                    COUNT(l),
@@ -43,13 +41,14 @@ public interface ServiceLogRepository extends JpaRepository<ServiceLog, Long> {
             """)
     List<Object[]> findSummaryRaw();
 
-    // Last N logs for timeline chart
+    // ✅ FIX: usar Pageable en lugar de LIMIT (H2 no soporta LIMIT en JPQL)
     @Query("""
             SELECT l FROM ServiceLog l
             WHERE l.serviceId = :serviceId
             ORDER BY l.timestamp DESC
-            LIMIT :n
             """)
-    List<ServiceLog> findLastNByService(@Param("serviceId") String serviceId,
-                                        @Param("n") int n);
+    List<ServiceLog> findLastNByService(
+            @Param("serviceId") String serviceId,
+            Pageable pageable
+    );
 }

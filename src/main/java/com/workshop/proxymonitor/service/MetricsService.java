@@ -21,14 +21,17 @@ public class MetricsService {
     public List<ServiceMetricDto> getSummary() {
         return logRepository.findSummaryRaw().stream()
                 .map(row -> {
-                    String serviceId = (String) row[0];
-                    long total = (Long) row[1];
-                    long errors = (Long) row[2];
-                    long successes = total - errors;
-                    double errorRate = total > 0 ? (double) errors / total * 100 : 0.0;
-                    double avgMs = row[3] != null ? ((Double) row[3]) : 0.0;
-                    return new ServiceMetricDto(serviceId, total, errors, successes,
-                            Math.round(errorRate * 100.0) / 100.0, Math.round(avgMs * 100.0) / 100.0);
+                    String serviceId  = (String) row[0];
+                    long   total      = (Long)   row[1];
+                    long   errors     = (Long)   row[2];
+                    long   successes  = total - errors;
+                    double errorRate  = total > 0 ? (double) errors / total * 100 : 0.0;
+                    double avgMs      = row[3] != null ? (Double) row[3] : 0.0;
+                    return new ServiceMetricDto(
+                            serviceId, total, errors, successes,
+                            Math.round(errorRate * 100.0) / 100.0,
+                            Math.round(avgMs     * 100.0) / 100.0
+                    );
                 })
                 .toList();
     }
@@ -47,12 +50,12 @@ public class MetricsService {
         }
 
         Instant fromInstant = (from != null && !from.isBlank()) ? Instant.parse(from) : null;
-        Instant toInstant = (to != null && !to.isBlank()) ? Instant.parse(to) : null;
-
-        String serviceIdFilter = (serviceId != null && !serviceId.isBlank()) ? serviceId.toUpperCase() : null;
+        Instant toInstant   = (to   != null && !to.isBlank())   ? Instant.parse(to)   : null;
+        String  svcFilter   = (serviceId != null && !serviceId.isBlank())
+                              ? serviceId.toUpperCase() : null;
 
         var pageResult = logRepository.findFiltered(
-                serviceIdFilter, statusEnum, fromInstant, toInstant,
+                svcFilter, statusEnum, fromInstant, toInstant,
                 PageRequest.of(page, size));
 
         return PagedResponseDto.from(pageResult.map(ServiceLogDto::from));
